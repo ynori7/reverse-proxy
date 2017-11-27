@@ -28,7 +28,7 @@ LOOP:
 		case tt == html.ErrorToken:
 			// End of the document, we're done
 			break LOOP
-		case tt == html.StartTagToken:
+		case tt == html.StartTagToken || tt == html.SelfClosingTagToken:
 			t := z.Token()
 
 			// Check if the token is an <a>, <script>, or <link> tag
