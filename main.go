@@ -7,6 +7,7 @@ import (
 
 	"github.com/ynori7/reverse-proxy/client"
 	"github.com/ynori7/reverse-proxy/rewriter"
+	"github.com/ynori7/reverse-proxy/resources"
 )
 
 type myClient struct {
@@ -18,17 +19,7 @@ func (c myClient) GetWithProxy(w http.ResponseWriter, r *http.Request) {
 	if u == "" {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`
-<html>
-<head><title>Scott's Go Proxy</title></head>
-<body>
-<form action='/' method='GET' style='width:1000px;margin:100px auto;'>
-	<input type='text' name='u' size='100' placeholder='Enter a URL here...'/>
-	<input type='submit' value='Go!'/>
-</form>
-</body>
-</html>
-		`))
+		w.Write([]byte(resources.LandingPageHTML))
 		return
 	}
 

@@ -68,7 +68,9 @@ func replaceLink(baseUri string, oldLink string) string {
 	} else if strings.Index(oldLink, "/") == 0 {
 		v.Add("u", parsedU.Scheme+"://"+parsedU.Hostname()+oldLink)
 		requestedUrl.RawQuery = v.Encode()
-	} else if strings.Index(oldLink, "javascript") == 0 {
+	} else if strings.Index(oldLink, "javascript") == 0 ||
+		strings.Index(oldLink, "data:") == 0 ||
+		strings.Index(oldLink, "#") == 0 {
 		return oldLink //Exit early in this case. Nothing to do here
 	} else {
 		v.Add("u", parsedU.Scheme+"://"+parsedU.Hostname()+parsedU.Path+"/"+oldLink)

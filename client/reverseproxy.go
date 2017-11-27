@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/tls"
 	"io"
 	"io/ioutil"
 	"log"
@@ -88,6 +89,7 @@ func NewReverseProxyClient(baseUrl string, transformResponseFunc TransformRespon
 		}).Dial,
 		TLSHandshakeTimeout:   3 * time.Second,
 		ResponseHeaderTimeout: 3 * time.Second,
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 	}
 
 	proxy := new(ReverseProxy)
