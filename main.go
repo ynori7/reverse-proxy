@@ -12,7 +12,7 @@ import (
 	"github.com/ynori7/reverse-proxy/rewriter"
 )
 
-const baseUrl = "http://localhost" //"https://sfinlay-test.herokuapp.com"
+const baseUrl = "https://sfinlay-test.herokuapp.com"
 
 type myClient struct {
 	reverseProxy http.Handler
