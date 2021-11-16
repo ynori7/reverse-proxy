@@ -12,7 +12,10 @@ import (
 	"github.com/ynori7/reverse-proxy/rewriter"
 )
 
-const baseUrl = "https://sfinlay-test.herokuapp.com"
+const (
+	defaultPort    = "8081"
+	defaultBaseURL = "http://localhost:8081"
+)
 
 type myClient struct {
 	reverseProxy http.Handler
@@ -31,7 +34,7 @@ func (c myClient) GetWithProxy(w http.ResponseWriter, r *http.Request) {
 		u = "http://" + u //try to make the url valid and hope the server will redirect if necessary
 	}
 
-	requestedUrl, err := url.ParseRequestURI(u)
+	requestedURL, err := url.ParseRequestURI(u)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Header().Set("Content-Type", "Text")
@@ -39,8 +42,8 @@ func (c myClient) GetWithProxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.URL = requestedUrl
-	r.Host = requestedUrl.Host
+	r.URL = requestedURL
+	r.Host = requestedURL.Host
 
 	c.reverseProxy.ServeHTTP(w, r)
 }
@@ -48,12 +51,18 @@ func (c myClient) GetWithProxy(w http.ResponseWriter, r *http.Request) {
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Fatal("$PORT must be set")
+		log.Println("$PORT was empty. Using default")
+		port = defaultPort
+	}
+	baseURL := os.Getenv("BASE_URL")
+	if baseURL == "" {
+		log.Println("$BASE_URL was empty. Using default")
+		baseURL = defaultBaseURL
 	}
 
 	reverseProxy := client.NewReverseProxyClient(
-		baseUrl+":"+port,
-		rewriter.RewriteHtml2,
+		baseURL,
+		rewriter.RewriteHtml,
 	)
 
 	c := myClient{reverseProxy: reverseProxy}

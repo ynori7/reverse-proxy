@@ -9,7 +9,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-func RewriteHtml2(uri string, reader io.Reader) string {
+func RewriteHtml(uri string, reader io.Reader) string {
 	doc, err := goquery.NewDocumentFromReader(reader)
 	if err != nil {
 		log.Fatal(err) //todo
@@ -17,13 +17,13 @@ func RewriteHtml2(uri string, reader io.Reader) string {
 
 	doc.Find("*").Each(func(i int, s *goquery.Selection) {
 		if linkAttr, ok := s.Attr("href"); ok {
-			s.SetAttr("href", replaceLink2(uri, linkAttr))
+			s.SetAttr("href", replaceLink(uri, linkAttr))
 		}
 		if linkAttr, ok := s.Attr("src"); ok {
-			s.SetAttr("src", replaceLink2(uri, linkAttr))
+			s.SetAttr("src", replaceLink(uri, linkAttr))
 		}
 		if linkAttr, ok := s.Attr("action"); ok {
-			s.SetAttr("action", replaceLink2(uri, linkAttr))
+			s.SetAttr("action", replaceLink(uri, linkAttr))
 		}
 	})
 
@@ -31,7 +31,7 @@ func RewriteHtml2(uri string, reader io.Reader) string {
 	return newBody
 }
 
-func replaceLink2(baseUri string, oldLink string) string {
+func replaceLink(baseUri string, oldLink string) string {
 	requestedUrl, _ := url.ParseRequestURI(baseUri)
 	v := url.Values{}
 	u := requestedUrl.Query().Get("u")
