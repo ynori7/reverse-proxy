@@ -13,6 +13,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/andybalholm/brotli"
 )
 
 type TransformResponseFunc func(uri string, reader io.Reader) string
@@ -57,24 +59,29 @@ func (t *ReverseProxy) replaceBody(resp *http.Response, newBody string) {
 		w := gzip.NewWriter(reader.(io.Writer))
 		contentLength, _ = w.Write([]byte(newBody))
 		w.Close()
+	case "br":
+		reader = new(bytes.Buffer)
+		w := brotli.NewWriter(reader.(io.Writer))
+		contentLength, _ = w.Write([]byte(newBody))
+		w.Close()
 	default:
 		reader = strings.NewReader(newBody)
 		contentLength = len(newBody)
 	}
-
 	body := ioutil.NopCloser(reader)
 	resp.Body = body
 	resp.ContentLength = int64(contentLength)
 	resp.Header.Del("Content-Length")
-
 }
 
 func (t *ReverseProxy) getBodyReader(resp *http.Response) io.Reader {
-	var reader io.ReadCloser
+	var reader io.Reader
 
 	switch resp.Header.Get("Content-Encoding") {
 	case "gzip":
 		reader, _ = gzip.NewReader(resp.Body)
+	case "br":
+		reader = brotli.NewReader(resp.Body)
 	default:
 		reader = resp.Body
 	}

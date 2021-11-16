@@ -1,59 +1,37 @@
 package rewriter
 
 import (
-	"bytes"
 	"io"
-	"io/ioutil"
+	"log"
 	"net/url"
 	"strings"
 
-	"golang.org/x/net/html"
+	"github.com/PuerkitoBio/goquery"
 )
 
-func RewriteHtml(uri string, reader io.Reader) string {
-	body, err := ioutil.ReadAll(reader)
+func RewriteHtml2(uri string, reader io.Reader) string {
+	doc, err := goquery.NewDocumentFromReader(reader)
 	if err != nil {
-		return "Something went wrong while parsing the response body: " + err.Error()
+		log.Fatal(err) //todo
 	}
-	newBody := string(body)
 
-	urls := make(map[string]string)
-	z := html.NewTokenizer(ioutil.NopCloser(bytes.NewBuffer(body)))
-
-LOOP:
-	for {
-		tt := z.Next()
-
-		switch {
-		case tt == html.ErrorToken:
-			// End of the document, we're done
-			break LOOP
-		case tt == html.StartTagToken || tt == html.SelfClosingTagToken:
-			t := z.Token()
-
-			// Check if the token is an <a>, <script>, or <link> tag
-			mightHaveLink := t.Data == "a" || t.Data == "script" || t.Data == "link" || t.Data == "img"
-			if !mightHaveLink {
-				continue
-			}
-
-			for _, a := range t.Attr {
-				if a.Key == "href" || a.Key == "src" {
-					urls[a.Val] = replaceLink(uri, a.Val)
-				}
-			}
+	doc.Find("*").Each(func(i int, s *goquery.Selection) {
+		if linkAttr, ok := s.Attr("href"); ok {
+			s.SetAttr("href", replaceLink2(uri, linkAttr))
 		}
-	}
+		if linkAttr, ok := s.Attr("src"); ok {
+			s.SetAttr("src", replaceLink2(uri, linkAttr))
+		}
+		if linkAttr, ok := s.Attr("action"); ok {
+			s.SetAttr("action", replaceLink2(uri, linkAttr))
+		}
+	})
 
-	for key, val := range urls {
-		newBody = strings.Replace(newBody, "\""+key+"\"", "\""+val+"\"", -1)
-		newBody = strings.Replace(newBody, "'"+key+"'", "'"+val+"'", -1)
-	}
-
+	newBody, _ := doc.Html()
 	return newBody
 }
 
-func replaceLink(baseUri string, oldLink string) string {
+func replaceLink2(baseUri string, oldLink string) string {
 	requestedUrl, _ := url.ParseRequestURI(baseUri)
 	v := url.Values{}
 	u := requestedUrl.Query().Get("u")
