@@ -1,14 +1,18 @@
 package main
 
 import (
+        "log"
 	"net/http"
 	"net/url"
+        "os"
 	"strings"
 
 	"github.com/ynori7/reverse-proxy/client"
 	"github.com/ynori7/reverse-proxy/rewriter"
 	"github.com/ynori7/reverse-proxy/resources"
 )
+
+const baseUrl = "https://sfinlay-test.herokuapp.com"
 
 type myClient struct {
 	reverseProxy http.Handler
@@ -42,13 +46,20 @@ func (c myClient) GetWithProxy(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
+
 	reverseProxy := client.NewReverseProxyClient(
-		"http://localhost:8001",
+		baseUrl+":"+port,
 		rewriter.RewriteHtml,
 	)
 
 	c := myClient{reverseProxy: reverseProxy}
 
+        log.Println("Starting server...")
+
 	http.HandleFunc("/", c.GetWithProxy)
-	http.ListenAndServe(":8001", nil)
+	log.Println(http.ListenAndServe(":"+port, nil))
 }
